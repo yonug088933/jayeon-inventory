@@ -248,35 +248,123 @@ input[type="date"]:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,9
 .add-btn:hover{background:var(--blue-l);color:var(--blue);border-color:#93c5fd;}
 
 /* CARD GRID */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:14px;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px;}
 .card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;transition:border-color .18s,box-shadow .18s;}
 .card:hover{border-color:var(--border2);box-shadow:var(--sh-md);}
-.card-hd{display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--border);background:var(--surface2);}
-.card-ico{font-size:15px;}
-.card-ttl{font-size:13px;font-weight:700;color:var(--text);}
-.card-bd{padding:2px 0;}
+.card-hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.card-ico{font-size:14px;}
+.card-ttl{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.3px;}
+.card-bd{padding:6px;display:flex;flex-direction:column;gap:0;}
 
-/* ITEM ROW — 세로 2줄 레이아웃 */
+/* ── ITEM CARD (품목 카드형) ── */
 .irow{
+  background:#fff;border:1.5px solid var(--border);border-radius:12px;
+  padding:0;margin-bottom:8px;box-shadow:var(--sh);
+  overflow:hidden;transition:box-shadow .18s,border-color .18s;
   display:flex;flex-direction:column;
-  padding:10px 10px 10px 4px;border-bottom:1px solid #f1f5f9;transition:background .1s;gap:7px;
-  position:relative;
 }
-.irow:last-child{border-bottom:none;}
-.irow:hover{background:#fafbfc;}
-/* 윗줄: 이름 + 재고 */
-.irow-top{display:flex;align-items:center;gap:8px;flex:1;}
-.iname{font-size:14px;color:var(--text);font-weight:700;flex:1;min-width:0;}
-.iunit{font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;}
-.stock-b{
-  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;
-  padding:3px 12px;border-radius:6px;min-width:64px;text-align:center;flex-shrink:0;
+.irow:last-child{margin-bottom:0;}
+.irow:hover{box-shadow:var(--sh-md);border-color:var(--border2);}
+.irow.dragging{opacity:.4;}
+.irow.drag-over{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* 드래그 핸들 (카드 상단 바) */
+.drag-col{
+  display:flex;align-items:center;justify-content:center;
+  height:24px;background:var(--surface3);
+  color:var(--text3);font-size:13px;opacity:.5;
+  cursor:grab;user-select:none;letter-spacing:4px;
+  border-bottom:1px solid var(--border);
 }
-.sok{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;}
-.swarn{background:var(--red-l);color:var(--red);border:1px solid #fca5a5;animation:pw 1.8s ease-in-out infinite;}
-@keyframes pw{0%,100%{box-shadow:none;}50%{box-shadow:0 0 0 4px rgba(220,38,38,.1);}}
-/* 아랫줄: 수량입력 + 버튼들 */
-.irow-right{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;}
+.drag-col:active{cursor:grabbing;opacity:1;}
+
+/* 품목명 */
+.iname{
+  font-size:13px;color:var(--text2);font-weight:600;
+  padding:10px 14px 0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* 재고 표시 */
+.istock-row{
+  display:flex;align-items:center;gap:0;
+  margin:6px 10px 8px;border-radius:10px;overflow:hidden;
+  border:1.5px solid var(--border);
+}
+.istock-label{
+  background:var(--surface3);color:var(--text3);
+  font-size:13px;font-weight:700;
+  padding:10px 14px;flex-shrink:0;border-right:1.5px solid var(--border);
+}
+.istock-num{
+  flex:1;font-family:'JetBrains Mono',monospace;
+  font-size:22px;font-weight:800;
+  padding:8px 14px;text-align:center;
+}
+.istock-num.sok{background:#dcfce7;color:#15803d;}
+.istock-num.swarn{background:var(--red-l);color:var(--red);animation:pw 1.8s ease-in-out infinite;}
+@keyframes pw{0%,100%{box-shadow:none;}50%{box-shadow:inset 0 0 0 2px rgba(220,38,38,.2);}}
+.iunit{font-size:11px;color:var(--text3);text-align:right;padding:0 14px 4px;font-weight:500;}
+
+/* stock-b 호환 */
+.stock-b{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:3px 12px;border-radius:6px;min-width:64px;text-align:center;flex-shrink:0;}
+.sok-b{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;}
+.swarn-b{background:var(--red-l);color:var(--red);border:1px solid #fca5a5;}
+
+/* 수량 입력 */
+.ninput{
+  flex:1;background:var(--surface3);border:none;
+  color:var(--text);padding:10px 10px;border-radius:0;text-align:center;
+  font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;
+  outline:none;transition:.18s;min-width:0;
+}
+.ninput:focus{background:#e8f4fd;box-shadow:inset 0 0 0 2px var(--blue);}
+.ninput::placeholder{color:var(--text3);font-size:12px;font-weight:400;}
+
+/* 버튼 행 */
+.irow-right{display:flex;flex-direction:column;gap:0;padding:0 10px 10px;}
+.irow-right-top{
+  display:flex;align-items:center;gap:0;
+  border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:6px;
+}
+.irow-right-bot{display:flex;gap:6px;}
+
+.in-b{
+  flex:1;height:42px;padding:0;border-radius:0;border:none;
+  cursor:pointer;background:#f0fdf4;color:var(--green);
+  font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:4px;transition:.15s;
+  border-right:1.5px solid var(--border);
+}
+.in-b:hover{background:#dcfce7;}
+.out-b{
+  flex:1;height:42px;padding:0;border-radius:0;border:none;
+  cursor:pointer;background:var(--red-l);color:var(--red);
+  font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:4px;transition:.15s;
+}
+.out-b:hover{background:#fee2e2;}
+.prod-b{
+  flex:1;height:34px;padding:0;border-radius:8px;border:1.5px solid #bfdbfe;
+  cursor:pointer;background:var(--blue-l);color:var(--blue);
+  font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:3px;transition:.15s;
+}
+.prod-b:hover{background:#dbeafe;}
+.edit-b{
+  height:34px;padding:0 12px;border-radius:8px;border:1.5px solid var(--border2);
+  cursor:pointer;background:var(--surface3);color:var(--text2);
+  font-size:13px;font-family:'Noto Sans KR',sans-serif;
+  display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;
+}
+.edit-b:hover{background:var(--blue-l);color:var(--blue);border-color:#93c5fd;}
+.del-b{
+  height:34px;padding:0 10px;border-radius:8px;border:1.5px solid var(--border2);
+  cursor:pointer;background:var(--surface3);color:var(--text3);
+  font-size:12px;
+  display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;
+}
+.del-b:hover{background:var(--red-l);color:var(--red);}
 .ninput{
   width:70px;background:#f8fafc;border:1.5px solid var(--border2);
   color:var(--text);padding:6px 8px;border-radius:7px;text-align:center;
@@ -573,9 +661,9 @@ input[type="date"]:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,9
   .card-ttl { font-size:12px; }
 
   /* 아이템 행 */
-  .irow { padding:9px 11px; gap:6px; }
-  .iname { font-size:13px; }
-  .stock-b { font-size:12px; min-width:54px; padding:2px 8px; }
+  .istock-num { font-size:20px; }
+  .in-b,.out-b { font-size:13px; height:40px; }
+  .ninput { font-size:14px; }
 
   /* 버튼 영역 - 꽉 채우기 */
   .irow-right { gap:4px; }
@@ -1364,33 +1452,49 @@ function renderCat(tab, cat, ico) {
         <button class="edit-b" onclick="openEditModal('${tab}','${cat}','${item.id}')" title="수정">✎</button>
         <button class="del-b"  onclick="delItem('${tab}','${cat}','${item.id}')"  title="삭제">✕</button>`;
       if(isProd) {
-        html+=`<div class="irow" id="row-${item.id}">
-          <div class="irow-top">
-            <span class="iname">${item.name}</span>
-            <span class="iunit">${item.unit}</span>
-            <span class="stock-b ${w?'swarn':'sok'}">${(item.stock||0).toLocaleString()}</span>
+        html+=`<div class="irow" id="row-${item.id}" draggable="true"
+            data-tab="${tab}" data-cat="${cat}" data-id="${item.id}">
+          <div class="drag-col">· · · · · ·</div>
+          <span class="iname">${item.name}</span>
+          <div class="istock-row">
+            <span class="istock-label">재고</span>
+            <span class="istock-num ${w?'swarn':'sok'}">${(item.stock||0).toLocaleString()}</span>
           </div>
+          <div class="iunit">${item.unit}</div>
           <div class="irow-right">
-            <input class="ninput" type="number" id="${eid}" min="0" placeholder="수량" onkeydown="if(event.key==='Enter')doIn('${tab}','${cat}','${item.id}')">
-            <button class="in-b"   onclick="doIn('${tab}','${cat}','${item.id}')">▲ 입고</button>
-            <button class="prod-b" onclick="doProd('${tab}','${cat}','${item.id}')">⚙ 생산</button>
-            <button class="out-b"  onclick="doOut('${tab}','${cat}','${item.id}')">▼ 출고</button>
-            ${commonBtns}
+            <div class="irow-right-top">
+              <input class="ninput" type="number" id="${eid}" min="0" placeholder="수량 입력" onkeydown="if(event.key==='Enter')doIn('${tab}','${cat}','${item.id}')">
+            </div>
+            <div class="irow-right-bot">
+              <button class="in-b"   onclick="doIn('${tab}','${cat}','${item.id}')">▲ 입고</button>
+              <button class="prod-b" onclick="doProd('${tab}','${cat}','${item.id}')">⚙ 생산</button>
+              <button class="out-b"  onclick="doOut('${tab}','${cat}','${item.id}')">▼ 출고</button>
+            </div>
+            <div class="irow-right-bot" style="margin-top:2px;">
+              ${commonBtns}
+            </div>
           </div></div>`;
       } else {
         html+=`<div class="irow" id="row-${item.id}" draggable="true"
             data-tab="${tab}" data-cat="${cat}" data-id="${item.id}">
-          <div class="drag-handle" title="드래그해서 순서 변경">⠿</div>
-          <div class="irow-top">
-            <span class="iname">${item.name}</span>
-            <span class="iunit">${item.unit}</span>
-            <span class="stock-b ${w?'swarn':'sok'}">${(item.stock||0).toLocaleString()}</span>
+          <div class="drag-col">· · · · · ·</div>
+          <span class="iname">${item.name}</span>
+          <div class="istock-row">
+            <span class="istock-label">재고</span>
+            <span class="istock-num ${w?'swarn':'sok'}">${(item.stock||0).toLocaleString()}</span>
           </div>
+          <div class="iunit">${item.unit}</div>
           <div class="irow-right">
-            <input class="ninput" type="number" id="${eid}" min="0" placeholder="수량" onkeydown="if(event.key==='Enter')doIn('${tab}','${cat}','${item.id}')">
-            <button class="in-b"  onclick="doIn('${tab}','${cat}','${item.id}')">▲ 입고</button>
-            <button class="out-b" onclick="doOut('${tab}','${cat}','${item.id}')">▼ 출고</button>
-            ${commonBtns}
+            <div class="irow-right-top">
+              <input class="ninput" type="number" id="${eid}" min="0" placeholder="수량 입력" onkeydown="if(event.key==='Enter')doIn('${tab}','${cat}','${item.id}')">
+            </div>
+            <div class="irow-right-bot">
+              <button class="in-b"  onclick="doIn('${tab}','${cat}','${item.id}')">▲ 입고</button>
+              <button class="out-b" onclick="doOut('${tab}','${cat}','${item.id}')">▼ 출고</button>
+            </div>
+            <div class="irow-right-bot" style="margin-top:2px;">
+              ${commonBtns}
+            </div>
           </div></div>`;
       }
     }
