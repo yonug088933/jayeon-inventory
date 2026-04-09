@@ -84,15 +84,9 @@ header{
 }
 .logo-text{font-size:15px;font-weight:800;letter-spacing:-.5px;white-space:nowrap;color:var(--text);}
 .logo-text em{color:var(--accent);font-style:normal;}
-/* 실시간 + 날짜 가운데 영역 */
-.hd-center{
-  display:flex;align-items:center;gap:8px;flex:1;min-width:0;
-}
+
 .hd-right{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:auto;}
-.hd-date{
-  font-size:12px;font-weight:600;color:var(--text3);
-  white-space:nowrap;
-}
+
 .hd-cfg{width:34px;height:34px;border-radius:9px;border:none;background:var(--surface3);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:.15s;flex-shrink:0;}
 .hd-cfg:hover{background:var(--accent-l);color:var(--accent);}
 /* ── 햄버거 버튼 ── */
@@ -484,13 +478,7 @@ input[type="date"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
 <header>
   <div class="logo">
     <div class="logo-icon">🥚</div>
-    <div class="logo-text">자연 <em>재고관리</em> 프로그램</div>
-  </div>
-  <div class="hd-center">
-    <div id="sync-status" class="sync-status sync-ok" style="display:none">
-      <div class="sync-dot"></div><span id="sync-txt">실시간</span>
-    </div>
-    <div class="hd-date" id="hdDate"></div>
+    <div class="logo-text">자연 <em>재고관리</em></div>
   </div>
   <div class="hd-right">
     <button class="hd-menu-btn" onclick="toggleMenu()" id="menuBtn">
