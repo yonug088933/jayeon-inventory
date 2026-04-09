@@ -83,16 +83,60 @@ header{
 .hd-date{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--text3);background:var(--surface3);padding:5px 10px;border-radius:8px;white-space:nowrap;}
 .hd-cfg{width:34px;height:34px;border-radius:9px;border:none;background:var(--surface3);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:.15s;flex-shrink:0;}
 .hd-cfg:hover{background:var(--accent-l);color:var(--accent);}
-.hd-menu-btn{width:36px;height:36px;border-radius:10px;border:none;background:var(--surface3);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.15s;flex-shrink:0;}
+/* ── 햄버거 버튼 ── */
+.hd-menu-btn{
+  width:36px;height:36px;border-radius:10px;border:none;
+  background:var(--surface3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);transition:.15s;flex-shrink:0;padding:0;
+}
 .hd-menu-btn:hover{background:var(--accent-l);color:var(--accent);}
-.hd-menu{position:fixed;top:64px;right:12px;z-index:200;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--sh-md);padding:6px;min-width:230px;animation:menuIn .15s ease;}
-@keyframes menuIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-.hd-menu-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;cursor:pointer;transition:.12s;}
-.hd-menu-item:hover{background:var(--surface3);}
-.hd-menu-ico{font-size:20px;flex-shrink:0;width:28px;text-align:center;}
-.hd-menu-label{font-size:14px;font-weight:700;color:var(--text);}
-.hd-menu-sub{font-size:11px;color:var(--text3);margin-top:1px;}
-.hd-menu-divider{height:1px;background:var(--border);margin:4px 8px;}
+.hd-menu-lines{display:flex;flex-direction:column;gap:4px;width:18px;}
+.hd-menu-lines span{display:block;height:2px;background:currentColor;border-radius:2px;transition:.2s;}
+.hd-menu-btn:hover .hd-menu-lines span:nth-child(1){transform:translateX(3px);}
+.hd-menu-btn:hover .hd-menu-lines span:nth-child(3){transform:translateX(-3px);}
+
+/* ── 바텀 시트 메뉴 ── */
+.menu-backdrop{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(10,15,30,.4);backdrop-filter:blur(4px);
+}
+.menu-backdrop.open{display:block;}
+.menu-sheet{
+  position:fixed;bottom:-100%;left:0;right:0;z-index:501;
+  background:#f4f6f9;border-radius:24px 24px 0 0;
+  padding:12px 16px 40px;
+  transition:bottom .3s cubic-bezier(.32,0,.67,0);
+  max-height:85vh;overflow-y:auto;
+}
+.menu-sheet.open{bottom:0;transition:bottom .35s cubic-bezier(.33,1,.68,1);}
+.menu-sheet-handle{width:40px;height:4px;background:#d0d7e2;border-radius:2px;margin:0 auto 16px;}
+.menu-sheet-title{font-size:13px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;padding:0 4px;}
+.menu-sheet-section{background:#fff;border-radius:16px;margin-bottom:12px;overflow:hidden;}
+.menu-sheet-item{
+  width:100%;display:flex;align-items:center;gap:14px;
+  padding:14px 16px;border:none;background:transparent;cursor:pointer;
+  border-bottom:1px solid var(--border);text-align:left;
+  transition:background .12s;
+}
+.menu-sheet-item:last-child{border-bottom:none;}
+.menu-sheet-item:active{background:var(--surface3);}
+.msi-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.msi-text{flex:1;min-width:0;}
+.msi-label{font-size:15px;font-weight:700;color:var(--text);font-family:'Noto Sans KR',sans-serif;}
+.msi-sub{font-size:12px;color:var(--text3);margin-top:2px;font-family:'Noto Sans KR',sans-serif;}
+.msi-arrow{font-size:20px;color:var(--border2);font-weight:300;flex-shrink:0;}
+.menu-sheet-close{
+  width:100%;padding:15px;border:none;border-radius:14px;
+  background:#fff;color:var(--text2);font-size:16px;font-weight:700;
+  cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.12s;
+  margin-top:4px;
+}
+.menu-sheet-close:active{background:var(--surface3);}
 
 /* ── TABS ── */
 .tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid var(--border);display:flex;padding:0;box-shadow:0 -4px 20px rgba(0,0,0,.06);}
@@ -432,44 +476,61 @@ input[type="date"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
   </div>
   <div class="hd-right">
     <div id="sync-status" class="sync-status sync-ok" style="display:none">
-      <div class="sync-dot"></div><span id="sync-txt">연결됨</span>
+      <div class="sync-dot"></div><span id="sync-txt">실시간</span>
     </div>
     <div class="hd-date" id="hdDate"></div>
-    <button class="hd-menu-btn" onclick="toggleMenu()" id="menuBtn">☰</button>
-  </div>
-  <!-- 드롭다운 메뉴 -->
-  <div class="hd-menu" id="hdMenu" style="display:none">
-    <div class="hd-menu-item" onclick="openWriterModal();closeMenu()">
-      <span class="hd-menu-ico">👤</span>
-      <div>
-        <div class="hd-menu-label">작성자 이름 설정</div>
-        <div class="hd-menu-sub" id="writerMenuSub">미설정</div>
-      </div>
-    </div>
-    <div class="hd-menu-item" onclick="openPriceModal();closeMenu()">
-      <span class="hd-menu-ico">💰</span>
-      <div>
-        <div class="hd-menu-label">단가 설정</div>
-        <div class="hd-menu-sub">품목별 단가 입력</div>
-      </div>
-    </div>
-    <div class="hd-menu-item" onclick="exportExcel();closeMenu()">
-      <span class="hd-menu-ico">📥</span>
-      <div>
-        <div class="hd-menu-label">엑셀 내보내기</div>
-        <div class="hd-menu-sub">재고현황 + 내역 CSV</div>
-      </div>
-    </div>
-    <div class="hd-menu-divider"></div>
-    <div class="hd-menu-item" onclick="openFbSetup();closeMenu()">
-      <span class="hd-menu-ico">⚙️</span>
-      <div>
-        <div class="hd-menu-label">Firebase 설정</div>
-        <div class="hd-menu-sub">데이터베이스 연결</div>
-      </div>
-    </div>
+    <button class="hd-menu-btn" onclick="toggleMenu()" id="menuBtn">
+      <span class="hd-menu-lines"><span></span><span></span><span></span></span>
+    </button>
   </div>
 </header>
+
+<!-- 풀스크린 바텀 시트 메뉴 -->
+<div class="menu-backdrop" id="menuBackdrop" onclick="closeMenu()"></div>
+<div class="menu-sheet" id="hdMenu">
+  <div class="menu-sheet-handle"></div>
+  <div class="menu-sheet-title">설정</div>
+
+  <div class="menu-sheet-section">
+    <button class="menu-sheet-item" onclick="openWriterModal();closeMenu()">
+      <div class="msi-icon" style="background:#eef3ff;color:var(--accent)">👤</div>
+      <div class="msi-text">
+        <div class="msi-label">작성자 이름</div>
+        <div class="msi-sub" id="writerMenuSub">탭하여 이름 설정</div>
+      </div>
+      <div class="msi-arrow">›</div>
+    </button>
+    <button class="menu-sheet-item" onclick="openPriceModal();closeMenu()">
+      <div class="msi-icon" style="background:#fff8f0;color:var(--orange)">💰</div>
+      <div class="msi-text">
+        <div class="msi-label">단가 설정</div>
+        <div class="msi-sub">품목별 단가 입력</div>
+      </div>
+      <div class="msi-arrow">›</div>
+    </button>
+    <button class="menu-sheet-item" onclick="exportExcel();closeMenu()">
+      <div class="msi-icon" style="background:#edfbf3;color:var(--green)">📥</div>
+      <div class="msi-text">
+        <div class="msi-label">엑셀 다운로드</div>
+        <div class="msi-sub">재고현황 + 내역 CSV</div>
+      </div>
+      <div class="msi-arrow">›</div>
+    </button>
+  </div>
+
+  <div class="menu-sheet-section">
+    <button class="menu-sheet-item" onclick="openFbSetup();closeMenu()">
+      <div class="msi-icon" style="background:#f5f5f5;color:#666">⚙️</div>
+      <div class="msi-text">
+        <div class="msi-label">Firebase 설정</div>
+        <div class="msi-sub">데이터베이스 연결</div>
+      </div>
+      <div class="msi-arrow">›</div>
+    </button>
+  </div>
+
+  <button class="menu-sheet-close" onclick="closeMenu()">닫기</button>
+</div>
 
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('main')"><span class="tab-ico">🏠</span>본점</button>
@@ -1912,21 +1973,21 @@ function renderStats() {
 // 햄버거 메뉴
 // ═══════════════════════════════════════════
 window.toggleMenu = function() {
-  const menu = document.getElementById('hdMenu');
-  const isOpen = menu.style.display !== 'none';
-  menu.style.display = isOpen ? 'none' : 'block';
+  const sheet = document.getElementById('hdMenu');
+  const backdrop = document.getElementById('menuBackdrop');
+  const isOpen = sheet.classList.contains('open');
+  if(isOpen) {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+  } else {
+    sheet.classList.add('open');
+    backdrop.classList.add('open');
+  }
 };
 window.closeMenu = function() {
-  document.getElementById('hdMenu').style.display = 'none';
+  document.getElementById('hdMenu').classList.remove('open');
+  document.getElementById('menuBackdrop').classList.remove('open');
 };
-// 메뉴 바깥 클릭 시 닫기
-document.addEventListener('click', function(e) {
-  const menu = document.getElementById('hdMenu');
-  const btn  = document.getElementById('menuBtn');
-  if(menu && !menu.contains(e.target) && !btn.contains(e.target)) {
-    menu.style.display = 'none';
-  }
-});
 
 function initWriter() {
   const name = localStorage.getItem('writerName')||'';
