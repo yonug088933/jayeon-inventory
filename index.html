@@ -814,7 +814,9 @@ input[type="date"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
 <div id="toast"></div>
 
 <!-- Firebase SDK (CDN) -->
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 const FB_URL = 'https://program-953e1-default-rtdb.firebaseio.com';
 
 // ═══════════════════════════════════════════
@@ -995,25 +997,10 @@ function getFbConfig() {
   try { return JSON.parse(localStorage.getItem('fbConfig') || 'null'); } catch(e) { return null; }
 }
 
-let _pollTimer = null;
-
-// ── Firebase REST API (SDK 불필요) ────────────
-async function fbFetch(path, method='GET', data=null) {
-  const url = FB_URL + '/' + path + '.json';
-  const opts = {method};
-  if(data !== null) {
-    opts.headers = {'Content-Type':'application/json'};
-    opts.body = JSON.stringify(data);
-  }
-  const res = await fetch(url, opts);
-  if(!res.ok) throw new Error('HTTP ' + res.status);
-  return method === 'GET' ? res.json() : true;
-}
+let fbDb = null;
 
 async function initFirebase(cfg) {
   try {
-    isFirebaseMode = true;
-
     // 캐시 즉시 표시
     try {
       const cachedD = localStorage.getItem('cache_inventory');
@@ -1022,47 +1009,34 @@ async function initFirebase(cfg) {
       if(cachedL) { LOGS = JSON.parse(cachedL); }
     } catch(e) {}
 
-    // Firebase 데이터 로드
-    const [invData, logData] = await Promise.all([
-      fbFetch('inventory'),
-      fbFetch('logs')
-    ]);
+    const app = initializeApp({
+      apiKey: cfg.key,
+      databaseURL: cfg.url,
+      projectId: 'program-953e1',
+      authDomain: 'program-953e1.firebaseapp.com',
+    });
+    fbDb = getDatabase(app);
+    isFirebaseMode = true;
 
-    if(invData) {
-      D = invData;
-      localStorage.setItem('cache_inventory', JSON.stringify(D));
-    } else {
-      await fbFetch('inventory', 'PUT', DEF);
-      await fbFetch('logs', 'PUT', []);
-    }
-    if(logData) {
-      LOGS = Array.isArray(logData) ? logData : Object.values(logData);
+    onValue(ref(fbDb, 'inventory'), (snap) => {
+      if(snap.exists()) {
+        D = snap.val();
+        localStorage.setItem('cache_inventory', JSON.stringify(D));
+        renderAll();
+      } else {
+        set(ref(fbDb,'inventory'), DEF);
+        set(ref(fbDb,'logs'), []);
+      }
+      hideLoading();
+      setSyncStatus('ok');
+      document.getElementById('fb-setup').style.display = 'none';
+      document.getElementById('sync-status').style.display = 'flex';
+    });
+    onValue(ref(fbDb, 'logs'), (snap) => {
+      LOGS = snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
       localStorage.setItem('cache_logs', JSON.stringify(LOGS.slice(0,200)));
-    }
-
-    renderAll(); renderLog(); hideLoading();
-    setSyncStatus('ok');
-    document.getElementById('fb-setup').style.display = 'none';
-    document.getElementById('sync-status').style.display = 'flex';
-
-    // 10초마다 폴링 동기화
-    if(_pollTimer) clearInterval(_pollTimer);
-    _pollTimer = setInterval(async () => {
-      try {
-        const [inv, log] = await Promise.all([fbFetch('inventory'), fbFetch('logs')]);
-        if(inv) {
-          const s = JSON.stringify(inv);
-          if(s !== localStorage.getItem('cache_inventory')) {
-            D = inv; localStorage.setItem('cache_inventory', s); renderAll();
-          }
-        }
-        if(log) {
-          const arr = Array.isArray(log) ? log : Object.values(log);
-          LOGS = arr; localStorage.setItem('cache_logs', JSON.stringify(arr.slice(0,200))); renderLog();
-        }
-        setSyncStatus('ok');
-      } catch(e) { setSyncStatus('err'); }
-    }, 10000);
+      renderLog();
+    });
 
     return true;
   } catch(e) {
@@ -1127,10 +1101,12 @@ function save() {
   setSyncStatus('saving');
   localStorage.setItem('cache_inventory', JSON.stringify(D));
   localStorage.setItem('cache_logs', JSON.stringify(LOGS.slice(0,200)));
-  Promise.all([
-    fbFetch('inventory', 'PUT', D),
-    fbFetch('logs', 'PUT', LOGS)
-  ]).then(()=>setSyncStatus('ok')).catch((e)=>{console.error('save error',e);setSyncStatus('err');});
+  if(fbDb) {
+    Promise.all([
+      set(ref(fbDb,'inventory'), D),
+      set(ref(fbDb,'logs'), LOGS)
+    ]).then(()=>setSyncStatus('ok')).catch((e)=>{console.error('save error',e);setSyncStatus('err');});
+  }
 }
 
 function setSyncStatus(state) {
