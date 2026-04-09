@@ -816,7 +816,8 @@ input[type="date"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const FB_URL = 'https://program-953e1-default-rtdb.firebaseio.com';
 
 // ═══════════════════════════════════════════
 // 기본 데이터
@@ -985,7 +986,7 @@ let D = JSON.parse(JSON.stringify(DEF));
 let LOGS = [];
 let MC = {tab:'main', cat:'egg'};
 let editCtx = {tab:'', cat:'', id:''};
-let fbDb = null;
+// fbDb 제거됨 (REST API 사용)
 let isFirebaseMode = false;
 let saveTimer = null;
 
@@ -996,17 +997,12 @@ function getFbConfig() {
   try { return JSON.parse(localStorage.getItem('fbConfig') || 'null'); } catch(e) { return null; }
 }
 
+let fbDb = null;
+let _pollTimer = null;
+
 async function initFirebase(cfg) {
   try {
-    const app = initializeApp({
-      apiKey: cfg.key,
-      databaseURL: cfg.url,
-      projectId: 'program-953e1'
-    });
-    fbDb = getDatabase(app);
-    isFirebaseMode = true;
-
-    // 로컬 캐시 먼저 표시 (즉시 렌더링)
+    // 캐시 즉시 표시
     try {
       const cachedD = localStorage.getItem('cache_inventory');
       const cachedL = localStorage.getItem('cache_logs');
@@ -1014,30 +1010,40 @@ async function initFirebase(cfg) {
       if(cachedL) { LOGS = JSON.parse(cachedL); }
     } catch(e) {}
 
-    // Firebase 실시간 연결
+    const app = initializeApp({
+      apiKey: cfg.key,
+      databaseURL: cfg.url,
+      projectId: 'program-953e1',
+      authDomain: 'program-953e1.firebaseapp.com',
+    });
+    fbDb = getDatabase(app);
+    isFirebaseMode = true;
+
+    // 실시간 연결
     onValue(ref(fbDb, 'inventory'), (snap) => {
       if(snap.exists()) {
         D = snap.val();
-        // 데이터 없으면 기본값 저장
-        renderAll(); hideLoading();
         localStorage.setItem('cache_inventory', JSON.stringify(D));
+        renderAll();
       } else {
         set(ref(fbDb, 'inventory'), DEF);
         set(ref(fbDb, 'logs'), []);
       }
+      hideLoading();
       setSyncStatus('ok');
       document.getElementById('fb-setup').style.display = 'none';
       document.getElementById('sync-status').style.display = 'flex';
     });
     onValue(ref(fbDb, 'logs'), (snap) => {
       LOGS = snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
-      localStorage.setItem('cache_logs', JSON.stringify(LOGS.slice(0,100)));
+      localStorage.setItem('cache_logs', JSON.stringify(LOGS.slice(0,200)));
       renderLog();
     });
 
     return true;
   } catch(e) {
     console.error('Firebase error:', e);
+    setSyncStatus('err');
     return false;
   }
 }
@@ -1088,23 +1094,20 @@ function useDemoMode() {
 // 저장 (디바운스: 연속 입력 시 0.8초 뒤 1번만)
 // ═══════════════════════════════════════════
 function save() {
-  if (!isFirebaseMode) {
+  if(!isFirebaseMode) {
     localStorage.setItem('eggInvLocal', JSON.stringify(D));
     localStorage.setItem('eggLogsLocal', JSON.stringify(LOGS));
     return;
   }
   setSyncStatus('saving');
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    try {
-      await set(ref(fbDb, 'inventory'), D);
-      await set(ref(fbDb, 'logs'), LOGS);
-      setSyncStatus('ok');
-    } catch(e) {
-      setSyncStatus('err');
-      toast('저장 실패. 인터넷 연결을 확인하세요.', 'err');
-    }
-  }, 800);
+  localStorage.setItem('cache_inventory', JSON.stringify(D));
+  localStorage.setItem('cache_logs', JSON.stringify(LOGS.slice(0,200)));
+  if(fbDb) {
+    Promise.all([
+      set(ref(fbDb,'inventory'), D),
+      set(ref(fbDb,'logs'), LOGS)
+    ]).then(()=>setSyncStatus('ok')).catch(()=>setSyncStatus('err'));
+  }
 }
 
 function setSyncStatus(state) {
