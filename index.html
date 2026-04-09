@@ -998,6 +998,7 @@ function getFbConfig() {
 }
 
 let fbDb = null;
+let _saving = false; // 저장 중 onValue 무시용
 
 async function initFirebase(cfg) {
   try {
@@ -1019,6 +1020,7 @@ async function initFirebase(cfg) {
     isFirebaseMode = true;
 
     onValue(ref(fbDb, 'inventory'), (snap) => {
+      if(_saving) return; // 내가 저장한 변경이면 무시
       if(snap.exists()) {
         D = snap.val();
         localStorage.setItem('cache_inventory', JSON.stringify(D));
@@ -1033,6 +1035,7 @@ async function initFirebase(cfg) {
       document.getElementById('sync-status').style.display = 'flex';
     });
     onValue(ref(fbDb, 'logs'), (snap) => {
+      if(_saving) return;
       LOGS = snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
       localStorage.setItem('cache_logs', JSON.stringify(LOGS.slice(0,200)));
       renderLog();
@@ -1102,10 +1105,18 @@ function save() {
   localStorage.setItem('cache_inventory', JSON.stringify(D));
   localStorage.setItem('cache_logs', JSON.stringify(LOGS.slice(0,200)));
   if(fbDb) {
+    _saving = true; // 저장 시작 - onValue 무시
     Promise.all([
       set(ref(fbDb,'inventory'), D),
       set(ref(fbDb,'logs'), LOGS)
-    ]).then(()=>setSyncStatus('ok')).catch((e)=>{console.error('save error',e);setSyncStatus('err');});
+    ]).then(()=>{
+      setSyncStatus('ok');
+      setTimeout(()=>{ _saving = false; }, 2000); // 2초 후 onValue 다시 수신
+    }).catch((e)=>{
+      console.error('save error',e);
+      setSyncStatus('err');
+      _saving = false;
+    });
   }
 }
 
