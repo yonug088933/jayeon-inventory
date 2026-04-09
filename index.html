@@ -248,13 +248,23 @@ input[type="date"]:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,9
 .add-btn:hover{background:var(--blue-l);color:var(--blue);border-color:#93c5fd;}
 
 /* CARD GRID */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px;}
+.card-grid{display:flex;flex-direction:column;gap:16px;}.item-grid{display:flex;flex-direction:column;gap:16px;}
 .card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;transition:border-color .18s,box-shadow .18s;}
 .card:hover{border-color:var(--border2);box-shadow:var(--sh-md);}
 .card-hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);}
 .card-ico{font-size:14px;}
 .card-ttl{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.3px;}
 .card-bd{padding:6px;display:flex;flex-direction:column;gap:0;}
+/* 품목 그룹 */
+.item-group{display:flex;flex-direction:column;gap:0;}
+.item-group-hd{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 4px;margin-bottom:8px;
+  border-bottom:2px solid var(--border);
+}
+.item-group-ico{font-size:14px;}
+.item-group-ttl{font-size:12px;font-weight:800;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;}
+.item-group-bd{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px;}
 
 /* ── ITEM CARD (품목 카드형) ── */
 .irow{
@@ -1402,7 +1412,7 @@ function renderCat(tab, cat, ico) {
   const isProd = cat==='prod';
   let html='';
   for(const [g,gi] of Object.entries(groups)) {
-    html+=`<div class="card"><div class="card-hd"><span class="card-ico">${ico}</span><span class="card-ttl">${g}</span></div><div class="card-bd">`;
+    html+=`<div class="item-group"><div class="item-group-hd"><span class="item-group-ico">${ico}</span><span class="item-group-ttl">${g}</span></div><div class="item-group-bd">`;
     for(const item of gi) {
       const w = isProd ? false : isLow(item, cat);
       const eid = `n-${item.id}`;
